@@ -1,9 +1,13 @@
 ---
-layout: post
+layout: default
 title: "How I built MCP servers for systems that have no API"
 date: 2026-05-04
 description: "Build MCP servers for legacy systems without APIs. Parse HTML, validate schema, ship fast."
 ---
+
+# {{ page.title }}
+
+*Published 2026-05-04*
 
 ## The moment you realize there's no API
 
