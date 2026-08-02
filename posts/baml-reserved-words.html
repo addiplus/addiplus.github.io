@@ -4,6 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>A reserved word in a generated SDK is not a naming problem</title>
+<meta name="description" content="A Python keyword in a BAML schema breaks the whole generated SDK at import time. What the open pull request BoundaryML/baml#4070 had to fix, and why escaping at one call site is not enough.">
+<meta name="author" content="Joe Smith">
+<link rel="canonical" href="https://addiplus.github.io/posts/baml-reserved-words.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Joe Smith">
+<meta property="og:title" content="A reserved word in a generated SDK is not a naming problem">
+<meta property="og:description" content="A Python keyword in a BAML schema breaks the whole generated SDK at import time. What the open pull request BoundaryML/baml#4070 had to fix, and why escaping at one call site is not enough.">
+<meta property="og:url" content="https://addiplus.github.io/posts/baml-reserved-words.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="A reserved word in a generated SDK is not a naming problem">
+<meta name="twitter:description" content="A Python keyword in a BAML schema breaks the whole generated SDK at import time. What the open pull request BoundaryML/baml#4070 had to fix, and why escaping at one call site is not enough.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%230f1115'/%3E%3Ctext%20x='16'%20y='22'%20text-anchor='middle'%20font-family='ui-sans-serif,system-ui,sans-serif'%20font-size='17'%20font-weight='600'%20fill='%237fb3ff'%3Ea%3C/text%3E%3C/svg%3E">
 <style>
   :root {
     --bg: #0f1115;
@@ -197,6 +210,7 @@ class GateReport(pydantic.BaseModel):
 
 <footer>
 <p>PR: <a href="https://github.com/BoundaryML/baml/pull/4070">https://github.com/BoundaryML/baml/pull/4070</a> (open, unmerged, not approved by any maintainer).</p>
+<p><a href="../">Back to the index</a></p>
 </footer>
 
 </main>
