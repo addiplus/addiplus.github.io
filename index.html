@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Joe Smith, AI-native engineer</title>
+<meta name="description" content="MCP servers, agent tooling, and test harnesses for systems that are hard to test. Public test counts, CI runs, registry entries, and upstream commits.">
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161922;
+    --fg: #e6e8ee;
+    --muted: #9aa3b2;
+    --accent: #7fb3ff;
+    --rule: #262b36;
+    --chip-bg: #12151c;
+    --ok: #7fd0a4;
+    --open: #e2c08d;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #fbfbfc;
+      --panel: #ffffff;
+      --fg: #1a1d23;
+      --muted: #5c6470;
+      --accent: #1a5fd0;
+      --rule: #e2e5ea;
+      --chip-bg: #f4f5f8;
+      --ok: #17794a;
+      --open: #8a6116;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.65 ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-feature-settings: "kern" 1;
+  }
+  .wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 56px 22px 80px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  header.masthead { padding-bottom: 26px; border-bottom: 1px solid var(--rule); }
+  h1 {
+    margin: 0 0 10px;
+    font-size: 30px;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    font-weight: 650;
+  }
+  .lede { margin: 0 0 14px; font-size: 17px; color: var(--fg); max-width: 60ch; }
+  .claim { margin: 0; font-size: 15px; color: var(--muted); max-width: 66ch; }
+  .idlinks { margin-top: 18px; font-size: 14px; color: var(--muted); }
+  .idlinks a + a { margin-left: 16px; }
+  h2 {
+    margin: 46px 0 4px;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  h2 + .rule { height: 1px; background: var(--rule); margin-bottom: 22px; }
+  .item { margin: 0 0 26px; }
+  .item:last-child { margin-bottom: 0; }
+  .item h3 { margin: 0 0 6px; font-size: 17px; font-weight: 620; line-height: 1.35; }
+  .item p { margin: 0 0 9px; color: var(--fg); max-width: 68ch; }
+  .item p.sub { color: var(--muted); font-size: 15px; }
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .facts li {
+    font: 12.5px/1.4 ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    color: var(--muted);
+    background: var(--chip-bg);
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    padding: 3px 8px;
+    white-space: nowrap;
+  }
+  .facts li.green { color: var(--ok); }
+  .facts li a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+  .state {
+    display: inline-block;
+    font: 11.5px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 2px 7px;
+    vertical-align: 2px;
+    margin-left: 8px;
+    white-space: nowrap;
+  }
+  .state.open { color: var(--open); }
+  .state.merged { color: var(--ok); }
+  ul.plain { list-style: none; margin: 0; padding: 0; }
+  ul.plain li { margin: 0 0 13px; max-width: 68ch; }
+  ul.plain li:last-child { margin-bottom: 0; }
+  ul.plain .name { font-weight: 600; }
+  ul.plain .note { color: var(--muted); }
+  footer {
+    margin-top: 54px;
+    padding-top: 22px;
+    border-top: 1px solid var(--rule);
+    font-size: 14px;
+    color: var(--muted);
+  }
+  footer p { margin: 0 0 6px; }
+  @media (max-width: 520px) {
+    .wrap { padding: 38px 18px 60px; }
+    h1 { font-size: 26px; }
+    .lede { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <h1>Joe Smith</h1>
+    <p class="lede">AI-native engineer in Seattle. I build MCP servers, agent tooling, and test harnesses for systems that are hard to test.</p>
+    <p class="claim">Everything below is public and checkable: test counts, CI runs, registry entries, and commits in other people's repositories.</p>
+    <p class="idlinks">
+      <a href="https://github.com/addiplus">github.com/addiplus</a>
+      <a href="https://www.npmjs.com/~addiplus">npm</a>
+    </p>
+  </header>
+
+  <h2>What is worth your time</h2>
+  <div class="rule"></div>
+
+  <div class="item">
+    <h3><a href="https://github.com/addiplus/vercel-deployment-mcp">vercel-deployment-mcp</a></h3>
+    <p>Stateless stdio MCP server, four read-only tools for observing Vercel deployments.</p>
+    <ul class="facts">
+      <li>66 tests</li>
+      <li class="green">CI green</li>
+      <li>MIT</li>
+      <li><a href="https://www.npmjs.com/package/@addiplus/vercel-deployment-mcp">npm: @addiplus/vercel-deployment-mcp</a></li>
+      <li>registry: io.github.addiplus/vercel-deployment-mcp</li>
+    </ul>
+  </div>
+
+  <div class="item">
+    <h3><a href="https://github.com/addiplus/llamacpp-batch-invariance">llamacpp-batch-invariance</a></h3>
+    <p>Batch-invariance verifier for llama.cpp continuous batching. Per-cell diffing, a five-verdict output contract, and signed GREEN or RED certificates. Mock-sourced passes are non-promotable by construction, so the gate cannot rubber-stamp itself. Ships a real Phi-4 RED divergence certificate so you can watch the gate bite.</p>
+    <ul class="facts">
+      <li>138 tests across 8 files</li>
+      <li class="green">CI green</li>
+      <li>Apache 2.0</li>
+    </ul>
+  </div>
+
+  <div class="item">
+    <h3><a href="https://github.com/addiplus/registry-radar">registry-radar</a></h3>
+    <p>Next.js 16 App Router app for tracking npm and MCP registry packages: download sparklines, server-paginated version history, a watchlist, markdown export, and explicit failure states including a rate-limit banner with reset countdown and stale-while-error handling.</p>
+    <ul class="facts">
+      <li>142 tests across 16 files</li>
+      <li class="green">CI green</li>
+      <li>MIT</li>
+      <li><a href="https://registry-radar.vercel.app">live: registry-radar.vercel.app</a></li>
+    </ul>
+  </div>
+
+  <div class="item">
+    <h3><a href="https://github.com/addiplus/mcp-cookie-auth-reference">mcp-cookie-auth-reference</a></h3>
+    <p>Reference MCP server for cookie-session systems that expose no public API, with a Hono mock target and fixtures so the suite runs offline.</p>
+    <ul class="facts">
+      <li>24 tests</li>
+      <li>MIT</li>
+      <li><a href="https://mcp-cookie-auth-blog.vercel.app">writeup</a></li>
+    </ul>
+  </div>
+
+  <h2>Upstream</h2>
+  <div class="rule"></div>
+
+  <div class="item">
+    <h3><a href="https://github.com/BoundaryML/baml/pull/4070">BoundaryML/baml#4070</a><span class="state open">Open</span></h3>
+    <p>Escape Python reserved words in generated SDK identifiers. Covers every identifier site in the Python generator plus a bridge fix, preserving BAML wire identity while changing host-language spelling.</p>
+    <ul class="facts">
+      <li>+3,592 / -140</li>
+      <li>13 files</li>
+      <li><a href="posts/baml-reserved-words.html">writeup</a></li>
+    </ul>
+  </div>
+
+  <div class="item">
+    <h3><a href="https://github.com/vercel/ai/pull/15568">vercel/ai#15568</a><span class="state open">Open</span></h3>
+    <p>Resolve npx and uv ENOENT on Windows via shell spawn, with two platform-mocked tests.</p>
+    <ul class="facts">
+      <li>+95 / -9</li>
+      <li>3 files</li>
+    </ul>
+  </div>
+
+  <div class="item">
+    <h3><a href="https://github.com/mbachaud/Cymatix-Context/pull/190">mbachaud/Cymatix-Context#190</a><span class="state merged">Merged 2026-06-09</span></h3>
+    <p>A Grace Blackwell aarch64 launch-blocking shim, shipped default off so x86_64 does not pay the sync tax. I am one of two contributors to that project.</p>
+  </div>
+
+  <h2>Smaller things</h2>
+  <div class="rule"></div>
+
+  <ul class="plain">
+    <li><a class="name" href="https://github.com/addiplus/prd-engine">prd-engine</a><span class="note">, multi-agent PRD pipeline, 10 agents and 4 intensity tiers.</span></li>
+    <li><a class="name" href="https://github.com/addiplus/safe-rm-guard">safe-rm-guard</a><span class="note">, a Claude Code hook that blocks recursive deletes, including the false-positive case the obvious regex gets wrong.</span></li>
+    <li><a class="name" href="https://github.com/addiplus/claude-skill-pack">claude-skill-pack</a><span class="note">, four Bun-native Claude Code skills.</span></li>
+    <li><a class="name" href="https://github.com/addiplus/mcp-builder">mcp-builder</a><span class="note">, notes on dual-transport MCP servers and the OAuth 2.1 ceremony.</span></li>
+  </ul>
+
+  <h2>Writing</h2>
+  <div class="rule"></div>
+
+  <div class="item">
+    <h3><a href="posts/baml-reserved-words.html">A reserved word in a generated SDK is not a naming problem</a></h3>
+    <p class="sub">What BoundaryML/baml#4070 actually had to fix, and why escaping at one call site is not enough.</p>
+  </div>
+
+  <div class="item">
+    <h3><a href="https://mcp-cookie-auth-blog.vercel.app">How I built MCP servers for systems that have no API</a></h3>
+    <p class="sub">Cookie-session targets, an unstable HTML boundary, and where to put the stability layer.</p>
+  </div>
+
+  <footer>
+    <p>Seattle. Open to AI-native engineering work.</p>
+    <p><a href="https://github.com/addiplus">github.com/addiplus</a></p>
+  </footer>
+
+</div>
+</body>
+</html>

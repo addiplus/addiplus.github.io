@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A reserved word in a generated SDK is not a naming problem</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161922;
+    --fg: #e6e8ee;
+    --muted: #9aa3b2;
+    --accent: #7fb3ff;
+    --rule: #262b36;
+    --code-bg: #12151c;
+    --code-fg: #d6dae4;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #fbfbfc;
+      --panel: #ffffff;
+      --fg: #1a1d23;
+      --muted: #5c6470;
+      --accent: #1a5fd0;
+      --rule: #e2e5ea;
+      --code-bg: #f2f4f7;
+      --code-fg: #23272f;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.68 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: 2.5rem 1.15rem 4rem;
+  }
+  main {
+    max-width: 46rem;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 1.95rem;
+    line-height: 1.24;
+    letter-spacing: -0.015em;
+    margin: 0 0 1.3rem;
+  }
+  h2 {
+    font-size: 1.22rem;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    margin: 2.6rem 0 0.9rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--rule);
+  }
+  p { margin: 0 0 1.15rem; }
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(127,179,255,0.35); }
+  a:hover { border-bottom-color: currentColor; }
+  strong { font-weight: 650; }
+  ol { padding-left: 1.35rem; margin: 0 0 1.15rem; }
+  li { margin-bottom: 0.5rem; }
+  code {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    padding: 0.12em 0.36em;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 0.875em;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 0.95rem 1.05rem;
+    overflow-x: auto;
+    margin: 0 0 1.3rem;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+    font-size: 0.855rem;
+    line-height: 1.55;
+  }
+  .status {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 0.9rem 1.05rem;
+    margin: 0 0 1.6rem;
+  }
+  .status p { margin: 0; }
+  footer {
+    margin-top: 2.8rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--rule);
+    color: var(--muted);
+    font-size: 0.87rem;
+  }
+</style>
+</head>
+<body>
+<main>
+
+<h1>A reserved word in a generated SDK is not a naming problem</h1>
+
+<p>I filed a bug against BAML in July and then wrote the fix for it. The bug is easy to state: if a BAML enum member or class field happens to be spelled with a Python keyword, the Python client that BAML generates is not valid Python. The fix is not easy to state, which is the interesting part, and it is the reason this post exists.</p>
+
+<div class="status">
+<p>The PR is <a href="https://github.com/BoundaryML/baml/pull/4070">BoundaryML/baml#4070</a>. Before anything else, the status, because I would rather lead with it than bury it: <strong>the PR is open. It has not been merged and it has not been approved.</strong> More on where it actually stands at the end.</p>
+</div>
+
+<h2>1. What a reserved-word collision actually breaks</h2>
+
+<p>Start with what the generator emitted before the fix:</p>
+
+<pre><code>class Tier(str, enum.Enum):
+    None = "None"          # SyntaxError: cannot assign to None
+
+class GateReport(pydantic.BaseModel):
+    pass: bool             # SyntaxError: invalid syntax
+</code></pre>
+
+<p><code>baml generate</code> exits 0. It reports success. The damage shows up later, and it is worse than "one broken type."</p>
+
+<p>A <code>SyntaxError</code> is a <strong>module source-parse</strong> failure. Python does not get far enough to skip the bad line. So a single keyword-named enum member takes down the entire generated <code>baml_sdk/__init__.py</code>, and every symbol in the generated SDK becomes unimportable. A static, always-reproducible codegen defect gets converted into a runtime import failure a long way from its cause, and the tool that caused it told you everything was fine.</p>
+
+<p>There was no workaround. Not in Python, because the file will not parse. Not in config either: the pydantic2 generator accepts <code>naming_convention = "preserve-case"</code>, which emits the invalid line, and <code>"language"</code>, which is unimplemented and panics.</p>
+
+<p>And then there is the single best detail in the whole issue. A field named <code>lambda</code> emits:</p>
+
+<pre><code>lambda: int
+</code></pre>
+
+<p>That is not a syntax error. In a class body it <strong>parses as a lambda expression</strong>. There is no error, no warning, no import failure. The field simply is not in the model anymore. Every other keyword screams. That one deletes your field and says nothing.</p>
+
+<p>The shape of the bug in one sentence: the set of Python keywords BAML lets through is strictly broader than the set BAML itself reserves. <code>class</code> is a BAML reserved word, so the parser rejects it early with an exit code of 4 and never emits a file. <code>None</code>, <code>True</code>, <code>False</code>, <code>def</code>, <code>pass</code>, <code>lambda</code> and friends are not BAML reserved words, so they fall straight through into invalid Python.</p>
+
+<p>This was also not a fresh discovery. Issue #759, "Detect reserved keywords in specific generator languages," described exactly this years ago, including the phrase "enum or class field." PR #1955 fixed it and shipped in v0.89.0, adding a check that rejected Python reserved words as enum values. But it fixed it in the <strong>classic</strong> generator line. That validation was never ported into the newer rust-bridge <code>sdkgen</code> pydantic2 generator, so the bug came back on the new code path, and this time it also spanned class field names. That is the general lesson worth taking: a codegen fix lives inside one specific emitter, not inside the project. A new emitter starts at zero.</p>
+
+<h2>2. Why escaping at every identifier site is the hard part</h2>
+
+<p>The escaping rule itself is trivial. Append a trailing underscore. BAML already used that convention internally: its stdlib <code>assert</code> module ships as <code>baml_sdk/vendor/assert_/</code>. The convention existed. It just was never applied to user-declared identifiers.</p>
+
+<p>The work is in enumerating the sites. An identifier does not appear once. Miss one and you have a module that half-renames itself, which is a new bug rather than a fixed one. The fix had to reach: enum members, class fields, class methods (emitted as <code>Callable</code>-typed property annotations, which bypassed the method-binding escape that already existed), class and enum and type-alias <strong>names</strong>, cross-references through <code>render_name_ref</code>, <code>__init__</code> re-exports, <code>.pyi</code> stubs, routing and import lines, and TypeVars.</p>
+
+<p>Two failures inside that surface are worth naming.</p>
+
+<p><strong>Escaping statelessly collides.</strong> Escaping is a pure function of the raw name, so raw <code>None</code> and raw <code>None_</code> both map to <code>None_</code>. A declaration containing both emits duplicate generic parameters, and references cannot tell them apart. The resolution was to stop re-escaping at each reference and instead allocate TypeVars once per leaf, resolving references through a per-scope raw-to-emitted map. Distinct raw spellings never collapse. Identical spellings deliberately share one module-level TypeVar, which is sound because each scope is independently generic on it.</p>
+
+<p><strong>The reference site and the import site are different sites.</strong> For a root class named <code>None</code>, the annotation rendered correctly as <code>None_</code>, but the routing code still emitted <code>from .. import None</code>. Invalid Python, and <code>None_</code> left unbound. The fix escapes the bare name once and reuses it for both the root names and the import anchor.</p>
+
+<p>A fix can also introduce its own collisions. The provenance marker described below is a class attribute named <code>__baml_wire_names__</code>, which is a new name a user identifier can collide with. So when a class emits a marker, the generator reserves that marker name across the class's combined field and method members. A colliding method gets bumped one trailing underscore. A colliding field cannot take that route, because pydantic refuses a model field whose name starts with <code>_</code> and would raise at class creation, so the field is projected to a spelling with no leading underscore and keeps its raw name through the marker.</p>
+
+<p>Two corner cases I confirmed with executable repros and then deliberately did not fix in scope: a class carrying both a field <code>pass</code> and a method <code>pass_</code>, where the later method assignment clobbers the field's <code>FieldInfo</code> and silently replaces it while the module still imports, and keyword-named classes on nested module paths emitting an unbound annotation in the parent <code>.pyi</code>, which is type-checker-only. Both are written into the PR body rather than papered over.</p>
+
+<h2>3. Why the wire identity has to survive the rename</h2>
+
+<p>Here is the load-bearing idea. Every identifier lives in two namespaces at once:</p>
+
+<ol>
+<li>The <strong>wire identity</strong>, the BAML name, which the engine, the prompt, and the protobuf payload use. <code>pass</code>, <code>None</code>, <code>lambda</code>.</li>
+<li>The <strong>host-language spelling</strong>, the Python name, which must be a legal Python identifier. <code>pass_</code>, <code>None_</code>, <code>lambda_</code>.</li>
+</ol>
+
+<p>Before this fix the generator treated those as one object, because for every legal identifier they had always been spelled identically. They were accidentally aliased. Escaping is precisely the operation that forces the distinction to become real, so the rename has to carry the wire name through a side channel.</p>
+
+<p>For enums: escape the member name, keep the value verbatim. <code>None_ = "None"</code>. Decode already constructed enums by value, so preserving the value is exactly what keeps decode working unchanged.</p>
+
+<p>For class fields: escape the attribute name and pin the wire name to a pydantic alias, <code>pass_: T = pydantic.Field(alias="pass")</code>, plus <code>populate_by_name=True</code> on any class with at least one escaped field.</p>
+
+<p>The byte-identity guarantee matters as much as the mechanism. A class whose fields are all ordinary gains no alias, no <code>populate_by_name</code>, and no marker. Only a schema that actually contains a keyword renders differently. Every new behavior is keyword-gated, and I backed that with digest comparison over four generated fixture trees plus a pinned keyword-free negative control.</p>
+
+<h2>4. What the encode-path risk was</h2>
+
+<p>This is the part that makes it more than a codegen patch.</p>
+
+<p>The generated SDK crosses the Python/engine boundary in two directions, and those two directions disagreed about which namespace was authoritative. <strong>Decode</strong> was already wire-name-driven: fields matched by BAML name, enums constructed by value. <strong>Encode</strong> was Python-identifier-driven: it sent <code>dict(value)</code> field names, and for enums it sent <code>value.name</code>.</p>
+
+<p>While the two namespaces were accidentally aliased, that asymmetry was invisible. Escaping breaks the accident. Which means renaming <code>pass</code> to <code>pass_</code> in the generator alone would fix imports and outputs while silently breaking inputs. You would get a module that imports cleanly, whose responses decode correctly, and which sends <code>pass_</code> to an engine expecting <code>pass</code>, forever. The half-fix is worse than the bug, because the bug is loud and the half-fix is not.</p>
+
+<p>So the generator change forced a bridge change: field encode routes through the alias when present, and enum encode sends <code>value.value</code> to match what decode already did.</p>
+
+<p>The first shape of that bridge change inferred wire identity from <strong>runtime shape</strong>: consume any alias found, consume any enum member's <code>.value</code>. Review showed that shape is ambiguous, because user code is also allowed to have aliases for its own unrelated reasons, and custom enums whose values are not their names exist, including integer enums where forwarding <code>.value</code> into a protobuf string field raises <code>TypeError</code>.</p>
+
+<p>The replacement is an explicit, generator-stamped provenance marker: <code>__baml_wire_names__</code> on classes, <code>__baml_wire_values__</code> on enums, listing only the escaped names mapped to their raw BAML names. The bridge reads it via <code>getattr</code>, honors it only if it is dict-shaped, and otherwise falls back to the attribute or member name, which is exactly the pre-fix behavior. Hand-written models and custom enums carry no marker and take the fallback. The runtime shape inference was deleted. The general rule I would keep: do not infer provenance from a property that user code is also allowed to have.</p>
+
+<p>One disclosed limitation: an older generated client carries no marker, so a newer runtime falls back to the escaped Python name and can mismatch the engine's raw name. BAML ships generator and runtime from one release and expects lockstep regeneration, so I added no cross-version shim and wrote the limitation down instead.</p>
+
+<p>The proportions are the reassuring part. The diff is +3592/-140 across 13 files, but 877 of those added lines are new test files, and the largest Rust diff is almost entirely inline <code>#[test]</code> modules. <strong>The live encode path change is 50 added lines in one file</strong>, <code>proto.py</code>, and that is the file I flagged in the PR body as deserving the closest review. Test gates: 146 generator crate tests (117 existing, 11 from the initial commit, 18 from the response commit), 31 bridge tests, and a fixture covering the 24 keywords BAML admits at source with a 10-test engine round-trip suite. Soft keywords (<code>match</code>, <code>case</code>, <code>type</code>) are deliberately left alone.</p>
+
+<h2>Where it actually stands</h2>
+
+<p>Open. Not merged, not approved. Three commits, 6 inline review comments, 4 conversation comments, 7 review submissions, mergeable with no conflicts but <code>mergeable_state = blocked</code>, untouched since 2026-07-18. The review activity on it came from the repository's automated reviewer bot and from my replies to it. No BoundaryML maintainer has reviewed it, commented on it, or signed off on it, and an automated approval is not a human one. Issue #4059 is still open, because the fix is not in.</p>
+
+<p>That is the honest ending. Whether it lands is somebody else's call, and it has not been made.</p>
+
+<footer>
+<p>PR: <a href="https://github.com/BoundaryML/baml/pull/4070">https://github.com/BoundaryML/baml/pull/4070</a> (open, unmerged, not approved by any maintainer).</p>
+</footer>
+
+</main>
+</body>
+</html>
